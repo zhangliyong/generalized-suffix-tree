@@ -27,6 +27,9 @@ class Node(object):
     def get_edge(self, char):
         return self.edge_dict.get(char)
 
+    def get_edges(self):
+        return self.edge_dict.itervalues()
+
     def __str__(self):
         return "id: %d, edges: %s" % (id(self), self.edge_dict)
 
@@ -202,6 +205,38 @@ class GST(object):
 
             self.remainder -= 1
             self.go_next()
+
+    def search(self, pattern):
+        cur_node = self.root
+        while pattern != "":
+            edge = cur_node.get_edge(pattern[0])
+            if edge is None:
+                return
+
+            label = edge.label
+            min_len = min(len(label), len(pattern))
+            if label[:min_len] == pattern[:min_len]:
+                cur_node = edge.target_node
+                pattern = pattern[min_len:]
+            else:
+                return
+
+        index_set = set()
+        for index in self.dfs(cur_node):
+            if index in index_set:
+                continue
+            index_set.add(index)
+            yield index
+
+    def dfs(self, node):
+        if node is None:
+            return
+        for index in node.get_indexs():
+            yield index
+
+        for edge in node.get_edges():
+            for index in self.dfs(edge.target_node):
+                yield index
 
     def add_suffix_link(self, last_parent, current):
         if not last_parent is None:
